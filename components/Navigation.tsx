@@ -1,13 +1,14 @@
 import React from 'react';
 import { ViewState } from '../types';
-import { Sparkles, Image, LayoutGrid, Palette as PaletteIcon } from 'lucide-react';
+import { Sparkles, Image, LayoutGrid, Palette as PaletteIcon, Settings } from 'lucide-react';
 
 interface NavigationProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
+  onOpenSettings: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentView, setView }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onOpenSettings }) => {
   const navItems: { id: ViewState; label: string; icon: React.ReactNode }[] = [
     { id: 'home', label: '探索', icon: <LayoutGrid className="w-4 h-4" /> },
     { id: 'create', label: '生成', icon: <Sparkles className="w-4 h-4" /> },
@@ -42,6 +43,13 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView }) => {
               )}
             </button>
           ))}
+          <button
+            onClick={onOpenSettings}
+            className="ml-2 p-2.5 rounded-full text-gray-500 hover:text-gray-900 hover:bg-white/40 transition-all duration-300"
+            title="设置"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </nav>

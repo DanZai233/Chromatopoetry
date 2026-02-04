@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navigation from './components/Navigation';
 import PaletteCard from './components/PaletteCard';
 import PreviewModal from './components/PreviewModal';
+import Settings from './components/Settings';
 import { ViewState, Palette, PreviewStyle } from './types';
 import { DEFAULT_PALETTES } from './constants';
-import { generatePalettesFromText, extractPaletteFromImage, generateWebsitePreview } from './services/geminiService';
+import { generatePalettesFromText, extractPaletteFromImage, generateWebsitePreview, getModelConfig } from './services/aiService';
 import { Loader2, UploadCloud, Search, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -29,6 +30,15 @@ const App: React.FC = () => {
   
   // Global Error
   const [error, setError] = useState<string | null>(null);
+  
+  // Settings State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  useEffect(() => {
+    const config = getModelConfig();
+    setHasApiKey(!!config.apiKey);
+  }, []);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -95,6 +105,12 @@ const App: React.FC = () => {
     if (!previewPalette) return;
     setPreviewStyle(newStyle);
     await generatePreviewContent(previewPalette, newStyle);
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+    const config = getModelConfig();
+    setHasApiKey(!!config.apiKey);
   };
 
   const renderContent = () => {
@@ -271,6 +287,48 @@ const App: React.FC = () => {
              )}
           </div>
         );
+
+      case 'settings':
+        return (
+          <div className="max-w-4xl mx-auto pt-32 pb-12 px-6 relative z-10">
+             <div className="text-center mb-16 animate-fade-in-up">
+                <h2 className="font-serif text-5xl font-bold text-gray-900 mb-6">设置</h2>
+                <p className="text-xl text-gray-600 font-light">配置您的AI模型供应商</p>
+             </div>
+             
+             <div className="glass-panel p-8 rounded-3xl text-center bg-white/40 shadow-lg">
+               {hasApiKey ? (
+                 <div className="py-8">
+                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                     <Sparkles className="w-10 h-10 text-green-600" />
+                   </div>
+                   <h3 className="text-2xl font-serif font-medium text-gray-900 mb-3">已配置AI模型</h3>
+                   <p className="text-gray-600 mb-6">您已成功配置了AI模型供应商，可以开始使用生成和提取功能。</p>
+                   <button
+                     onClick={() => setIsSettingsOpen(true)}
+                     className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
+                   >
+                     修改配置
+                   </button>
+                 </div>
+               ) : (
+                 <div className="py-8">
+                   <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                     <AlertCircle className="w-10 h-10 text-amber-600" />
+                   </div>
+                   <h3 className="text-2xl font-serif font-medium text-gray-900 mb-3">尚未配置AI模型</h3>
+                   <p className="text-gray-600 mb-6">请先配置您的AI模型供应商和API密钥，才能使用生成和提取功能。</p>
+                   <button
+                     onClick={() => setIsSettingsOpen(true)}
+                     className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors"
+                   >
+                     立即配置
+                   </button>
+                 </div>
+               )}
+             </div>
+          </div>
+        );
     }
   };
 
@@ -287,18 +345,18 @@ const App: React.FC = () => {
          <div className="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] bg-amber-100/60 rounded-full blur-[80px] animate-blob-reverse animation-delay-2000"></div>
       </div>
 
-      <Navigation currentView={view} setView={setView} />
+      <Navigation currentView={view} setView={setView} onOpenSettings={() => setIsSettingsOpen(true)} />
       
       <main className="relative z-10 min-h-screen flex flex-col">
         {renderContent()}
         
         <footer className="mt-auto py-12 text-center text-gray-500 text-sm font-light relative z-10">
           <p className="mb-2">© {new Date().getFullYear()} Chromatopoetry</p>
-          <p className="text-xs opacity-60">Designed with AI • Powered by Gemini</p>
+          <p className="text-xs opacity-60">Designed with AI • Multi-Model Support</p>
         </footer>
       </main>
 
-      {/* Modal is rendered at the root level */}
+      {/* Modals rendered at the root level */}
       <PreviewModal 
         isOpen={isPreviewOpen} 
         onClose={() => setIsPreviewOpen(false)}
@@ -308,6 +366,8 @@ const App: React.FC = () => {
         currentStyle={previewStyle}
         onStyleChange={handleStyleChange}
       />
+      
+      <Settings isOpen={isSettingsOpen} onClose={handleSettingsClose} />
     </div>
   );
 };
