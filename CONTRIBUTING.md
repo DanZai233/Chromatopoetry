@@ -8,7 +8,7 @@
 
 如果您发现了 bug 或有新的功能建议，请：
 
-1. 检查 [Issues](https://github.com/your-username/chromatopoetry/issues) 是否已有相同的问题
+1. 检查 [Issues](https://github.com/DanZai233/chromatopoetry/issues) 是否已有相同的问题
 2. 如果没有，创建一个新的 Issue，详细描述问题或建议
 
 ### 提交代码
@@ -18,7 +18,7 @@
 
 2. **克隆您的仓库**
    ```bash
-   git clone https://github.com/your-username/chromatopoetry.git
+   git clone https://github.com/DanZai233/chromatopoetry.git
    cd chromatopoetry
    ```
 

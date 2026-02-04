@@ -8,7 +8,7 @@
 
 <div align="center">
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fchromatopoetry)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDanZai233%2Fchromatopoetry)
 [![Docker](https://img.shields.io/badge/docker-blue?logo=docker&logoColor=white)](https://www.docker.com/)
 
 **[功能特性](#-功能特性)** • **[快速开始](#-快速开始)** • **[Vercel部署](#-vercel部署)** • **[Docker部署](#-docker部署)** • **[模型配置](#-模型配置)**
@@ -42,7 +42,7 @@
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/your-username/chromatopoetry.git
+   git clone https://github.com/DanZai233/chromatopoetry.git
    cd chromatopoetry
    ```
 
@@ -68,7 +68,7 @@
 
 点击下方按钮，将项目一键部署到 Vercel：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fchromatopoetry)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDanZai233%2Fchromatopoetry)
 
 ### 手动部署
 
@@ -119,6 +119,13 @@ A: 推送代码到 GitHub 后，Vercel 会自动重新部署。
 **Q: 如何配置自定义域名？**  
 A: 在 Vercel 项目设置 → Domains → Add Domain。
 
+**Q: API密钥安全吗？**  
+A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。但请注意：
+- 不要在公共设备上保存密钥
+- 定期更换 API 密钥
+- 不要将包含密钥的浏览器数据分享给他人
+- 建议使用限额较低的 API 密钥以降低风险
+
 ---
 
 ## 🐳 Docker部署
@@ -127,7 +134,7 @@ A: 在 Vercel 项目设置 → Domains → Add Domain。
 
 1. 克隆仓库并进入目录：
    ```bash
-   git clone https://github.com/your-username/chromatopoetry.git
+   git clone https://github.com/DanZai233/chromatopoetry.git
    cd chromatopoetry
    ```
 

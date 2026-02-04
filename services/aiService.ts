@@ -60,7 +60,8 @@ const getOpenAIClient = () => {
   const providerInfo = MODEL_PROVIDERS[currentConfig.provider];
   return new OpenAI({
     apiKey: currentConfig.apiKey,
-    baseURL: currentConfig.baseUrl || providerInfo.baseUrl
+    baseURL: currentConfig.baseUrl || providerInfo.baseUrl,
+    dangerouslyAllowBrowser: true
   });
 };
 
