@@ -153,9 +153,70 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
               type="text"
               value={config.model || ''}
               onChange={(e) => setConfig({ ...config, model: e.target.value })}
-              placeholder={`默认: ${MODEL_PROVIDERS[config.provider].defaultModel}`}
+              placeholder={MODEL_PROVIDERS[config.provider].modelPlaceholder || `默认: ${MODEL_PROVIDERS[config.provider].defaultModel}`}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
             />
+            {config.provider === 'volcengine' && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    API 模式
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfig({ ...config, useNativeApi: false })}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        !config.useNativeApi
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      OpenAI 兼容
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfig({ ...config, useNativeApi: true })}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        config.useNativeApi
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      原生 API
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`rounded-lg p-3 text-xs ${config.useNativeApi ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium mb-1">
+                        {config.useNativeApi ? '原生 API 模式配置：' : 'OpenAI 兼容接口模式配置：'}
+                      </p>
+                      {config.useNativeApi ? (
+                        <ul className="list-disc list-inside space-y-1 ml-1">
+                          <li>使用火山引擎 <strong>原生 Responses API</strong></li>
+                          <li>模型名称填写原生模型名称（如：<code className="bg-green-100 px-1 rounded">doubao-pro-32k</code>）</li>
+                          <li>API密钥格式：<code className="bg-green-100 px-1 rounded">AccessKeyID;AccessKeySecret</code></li>
+                          <li>支持图片输入，直接使用模型名称</li>
+                          <li>访问控制台：<a href="https://console.volcengine.com/ark" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">火山引擎控制台</a></li>
+                        </ul>
+                      ) : (
+                        <ul className="list-disc list-inside space-y-1 ml-1">
+                          <li>使用火山引擎 <strong>OpenAI 兼容接口</strong>（/chat/completions）</li>
+                          <li>模型名称应填写Endpoint ID，格式如：<code className="bg-amber-100 px-1 rounded">ep-20250215134427-k4s9k</code></li>
+                          <li>API密钥格式：<code className="bg-amber-100 px-1 rounded">AccessKeyID;AccessKeySecret</code></li>
+                          <li>需要创建推理接入点（Endpoint）</li>
+                          <li><strong>不要</strong>使用原生模型名称（如 <code>doubao-seed-1-6-251015</code>），会导致404错误</li>
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="pt-4 border-t border-gray-200">

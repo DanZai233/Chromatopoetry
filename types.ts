@@ -22,12 +22,18 @@ export interface ModelConfig {
   apiKey: string;
   baseUrl?: string;
   model?: string;
+  useNativeApi?: boolean;
 }
 
-export const MODEL_PROVIDERS: Record<ModelProvider, { name: string; defaultModel: string; baseUrl?: string }> = {
+export const MODEL_PROVIDERS: Record<ModelProvider, { name: string; defaultModel: string; baseUrl?: string; modelPlaceholder?: string }> = {
   gemini: { name: 'Gemini (Google)', defaultModel: 'gemini-3-flash-preview' },
   openai: { name: 'OpenAI', defaultModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1' },
   deepseek: { name: 'DeepSeek', defaultModel: 'deepseek-chat', baseUrl: 'https://api.deepseek.com/v1' },
   openrouter: { name: 'OpenRouter', defaultModel: 'anthropic/claude-3.5-sonnet', baseUrl: 'https://openrouter.ai/api/v1' },
-  volcengine: { name: '火山引擎', defaultModel: 'doubao-pro-32k', baseUrl: 'https://ark.cn-beijing.volces.com/api/v3' }
+  volcengine: { 
+    name: '火山引擎', 
+    defaultModel: 'doubao-pro-32k', 
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+    modelPlaceholder: '输入模型名称，例如：doubao-pro-32k'
+  }
 };

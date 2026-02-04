@@ -188,7 +188,7 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 | **OpenAI** | `gpt-4o-mini` | OpenAI GPT系列 |
 | **DeepSeek** | `deepseek-chat` | DeepSeek开源模型 |
 | **OpenRouter** | `anthropic/claude-3.5-sonnet` | 聚合多种模型 |
-| **火山引擎** | `doubao-pro-32k` | 字节跳动豆包模型 |
+| **火山引擎** | `ep-20250215134427-k4s9k` | 字节跳动豆包模型，需使用Endpoint ID |
 
 ### 配置步骤
 
@@ -197,6 +197,13 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 3. 输入对应的API密钥
 4. （可选）自定义Base URL和模型名称
 5. 点击"保存配置"
+
+**⚠️ 火山引擎用户注意：**
+- 应用支持两种API模式：OpenAI 兼容接口和原生 API
+- API密钥格式：`AccessKeyID;AccessKeySecret`
+- 配置面板中可以选择API模式，并会显示详细的配置说明
+- OpenAI 兼容模式：使用 Endpoint ID
+- 原生 API 模式：使用原生模型名称（如 `doubao-pro-32k`）
 
 配置完成后，您可以：
 - 通过"生成"页面使用文字描述创建配色
@@ -225,7 +232,24 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 
 ### 火山引擎
 - 访问 [火山引擎控制台](https://console.volcengine.com/ark)
-- 创建应用并获取API密钥
+- 在访问管理中获取API密钥，格式为 `AccessKeyID;AccessKeySecret`
+- **API密钥** 填写 `AccessKeyID;AccessKeySecret` 格式
+- **Base URL** 保持默认：`https://ark.cn-beijing.volces.com/api/v3`
+
+本应用支持火山引擎的两种API模式，可在设置中选择：
+
+**1. OpenAI 兼容接口模式（推荐新手）**
+- 模型名称填写 Endpoint ID（如：`ep-20250215134427-k4s9k`）
+- 需要创建推理接入点（Endpoint）
+- 使用标准的 OpenAI SDK
+
+**2. 原生 API 模式（推荐进阶用户）**
+- 模型名称填写原生模型名称（如：`doubao-pro-32k`）
+- 无需创建 Endpoint，直接使用模型
+- 支持图片输入，更完整的原生功能
+- 使用火山引擎 Responses API
+
+> 💡 **建议**：如果您刚开始使用，建议选择 **OpenAI 兼容接口**；如果您需要更完整的功能，可以选择 **原生 API**。
 
 ---
 

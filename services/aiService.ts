@@ -65,6 +65,31 @@ const getOpenAIClient = () => {
   });
 };
 
+const callVolcengineNative = async (model: string, input: any[]): Promise<any> => {
+  const baseUrl = currentConfig.baseUrl || MODEL_PROVIDERS.volcengine.baseUrl;
+  const url = `${baseUrl.replace('/api/v3', '/api/v3/responses')}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${currentConfig.apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model,
+      input
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'API request failed');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 const STYLE_PROMPTS: Record<PreviewStyle, string> = {
   poetic: "Artistic, Minimalist, and Poetic Landing Page. High-end, ample whitespace, serif typography, floating elements, abstract composition.",
   ecommerce: "Modern E-commerce Product Page. Clean product cards, 'Add to Cart' buttons, price tags, featured product hero, shopping bag icon.",
@@ -87,15 +112,15 @@ const extractJsonFromResponse = (content: string): any => {
 
 export const generatePalettesFromText = async (prompt: string): Promise<Palette[]> => {
   const fullPrompt = `
-    You are an expert colorist with a deep knowledge of traditional Chinese poetry and aesthetics. 
+    You are an expert colorist with a deep knowledge of traditional Chinese poetry and aesthetics.
     Generate 3 distinct color palettes (5 colors each) based on this description: "${prompt}".
-    
+
     For each palette:
     1. Give it a beautiful, poetic Chinese name (e.g., "雨过天青", "层林尽染").
     2. Provide a short, artistic description in Chinese explaining the vibe.
     3. Provide 5 hex color codes.
-    
-    Return the response as a JSON object with this structure:
+
+    Return response as a JSON object with this structure:
     {
       "palettes": [
         {
@@ -119,6 +144,19 @@ export const generatePalettesFromText = async (prompt: string): Promise<Palette[
         },
       });
       const json = JSON.parse(response.text || "{}");
+      return json.palettes?.map((p: any, index: number) => ({
+        id: `gen-text-${Date.now()}-${index}`,
+        name: p.name,
+        description: p.description,
+        colors: p.colors,
+      })) || [];
+    } else if (currentConfig.provider === 'volcengine' && currentConfig.useNativeApi) {
+      const model = currentConfig.model || MODEL_PROVIDERS.volcengine.defaultModel;
+      const data = await callVolcengineNative(model, [
+        { role: 'user', content: [{ type: 'input_text', text: fullPrompt }] }
+      ]);
+      const content = data.output?.[0]?.content?.[0]?.text || '{}';
+      const json = extractJsonFromResponse(content) || {};
       return json.palettes?.map((p: any, index: number) => ({
         id: `gen-text-${Date.now()}-${index}`,
         name: p.name,
@@ -187,14 +225,34 @@ export const extractPaletteFromImage = async (base64Image: string): Promise<Pale
         description: data.description || "基于图片生成的灵感配色",
         colors: data.colors || [],
       };
+    } else if (currentConfig.provider === 'volcengine' && currentConfig.useNativeApi) {
+      const model = currentConfig.model || MODEL_PROVIDERS.volcengine.defaultModel;
+      const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+      const data = await callVolcengineNative(model, [
+        {
+          role: 'user',
+          content: [
+            { type: 'input_text', text: fullPrompt },
+            { type: 'input_image', image_url: `data:image/png;base64,${cleanBase64}` }
+          ]
+        }
+      ]);
+      const content = data.output?.[0]?.content?.[0]?.text || '{}';
+      const paletteData = extractJsonFromResponse(content) || {};
+      return {
+        id: `gen-img-${Date.now()}`,
+        name: paletteData.name || "未命名配色",
+        description: paletteData.description || "基于图片生成的灵感配色",
+        colors: paletteData.colors || [],
+      };
     } else {
       const client = getOpenAIClient();
       const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
       const response = await client.chat.completions.create({
         model: currentConfig.model || MODEL_PROVIDERS[currentConfig.provider].defaultModel,
         messages: [
-          { 
-            role: 'user', 
+          {
+            role: 'user',
             content: [
               { type: 'text', text: fullPrompt },
               { type: 'image_url', image_url: { url: `data:image/png;base64,${cleanBase64}` } }
@@ -259,6 +317,14 @@ export const generateWebsitePreview = async (palette: Palette, style: PreviewSty
         }
       });
       const json = JSON.parse(response.text || "{}");
+      return json.html || "<div class='flex items-center justify-center h-screen'><h1>Preview Generation Failed</h1></div>";
+    } else if (currentConfig.provider === 'volcengine' && currentConfig.useNativeApi) {
+      const model = currentConfig.model || MODEL_PROVIDERS.volcengine.defaultModel;
+      const data = await callVolcengineNative(model, [
+        { role: 'user', content: [{ type: 'input_text', text: prompt }] }
+      ]);
+      const content = data.output?.[0]?.content?.[0]?.text || '{}';
+      const json = extractJsonFromResponse(content) || {};
       return json.html || "<div class='flex items-center justify-center h-screen'><h1>Preview Generation Failed</h1></div>";
     } else {
       const client = getOpenAIClient();
