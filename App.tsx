@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navigation from './components/Navigation';
 import PaletteCard from './components/PaletteCard';
 import PreviewModal from './components/PreviewModal';
-import { ViewState, Palette } from './types';
+import { ViewState, Palette, PreviewStyle } from './types';
 import { DEFAULT_PALETTES } from './constants';
 import { generatePalettesFromText, extractPaletteFromImage, generateWebsitePreview } from './services/geminiService';
 import { Loader2, UploadCloud, Search, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewPalette, setPreviewPalette] = useState<Palette | null>(null);
+  const [previewStyle, setPreviewStyle] = useState<PreviewStyle>('poetic');
   
   // Global Error
   const [error, setError] = useState<string | null>(null);
@@ -69,22 +70,31 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handlePreview = async (palette: Palette) => {
-    setIsPreviewOpen(true);
-    setPreviewPalette(palette);
-    setPreviewHtml(null);
+  const generatePreviewContent = async (palette: Palette, style: PreviewStyle) => {
     setIsPreviewLoading(true);
-
+    setPreviewHtml(null);
     try {
-      const html = await generateWebsitePreview(palette);
+      const html = await generateWebsitePreview(palette, style);
       setPreviewHtml(html);
     } catch (e) {
       console.error(e);
-      // Ensure the user sees an error state inside the modal if it fails
       setPreviewHtml("<div style='display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;'><h3>Preview generation failed. Please try again.</h3></div>");
     } finally {
       setIsPreviewLoading(false);
     }
+  };
+
+  const handlePreview = async (palette: Palette) => {
+    setIsPreviewOpen(true);
+    setPreviewPalette(palette);
+    setPreviewStyle('poetic'); // Reset to default style when opening new
+    await generatePreviewContent(palette, 'poetic');
+  };
+
+  const handleStyleChange = async (newStyle: PreviewStyle) => {
+    if (!previewPalette) return;
+    setPreviewStyle(newStyle);
+    await generatePreviewContent(previewPalette, newStyle);
   };
 
   const renderContent = () => {
@@ -295,6 +305,8 @@ const App: React.FC = () => {
         isLoading={isPreviewLoading}
         htmlContent={previewHtml}
         palette={previewPalette}
+        currentStyle={previewStyle}
+        onStyleChange={handleStyleChange}
       />
     </div>
   );

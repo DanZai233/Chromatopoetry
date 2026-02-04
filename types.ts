@@ -12,3 +12,5 @@ export interface Palette {
 }
 
 export type ViewState = 'home' | 'create' | 'extract';
+
+export type PreviewStyle = 'poetic' | 'ecommerce' | 'blog' | 'portfolio' | 'dashboard';

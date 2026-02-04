@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Palette } from "../types";
+import { Palette, PreviewStyle } from "../types";
 
 // Initialize Gemini Client
 // Requires process.env.API_KEY to be available in the environment
@@ -26,6 +26,14 @@ const PALETTE_RESPONSE_SCHEMA = {
     },
   },
   required: ["palettes"],
+};
+
+const STYLE_PROMPTS: Record<PreviewStyle, string> = {
+  poetic: "Artistic, Minimalist, and Poetic Landing Page. High-end, ample whitespace, serif typography, floating elements, abstract composition.",
+  ecommerce: "Modern E-commerce Product Page. Clean product cards, 'Add to Cart' buttons, price tags, featured product hero, shopping bag icon.",
+  blog: "Typography-focused Blog Post or Magazine Layout. Large article header, readable body text, sidebar with tags, comment section styling.",
+  portfolio: "Creative Portfolio/Gallery. Masonry or grid image layout, hover effects, large hero statement, project showcase cards.",
+  dashboard: "SaaS Analytics Dashboard. Sidebar navigation, data cards/widgets, stats (simulated with CSS), data tables, user profile."
 };
 
 export const generatePalettesFromText = async (prompt: string): Promise<Palette[]> => {
@@ -116,8 +124,9 @@ export const extractPaletteFromImage = async (base64Image: string): Promise<Pale
   }
 };
 
-export const generateWebsitePreview = async (palette: Palette): Promise<string> => {
+export const generateWebsitePreview = async (palette: Palette, style: PreviewStyle = 'poetic'): Promise<string> => {
   try {
+    const styleInstruction = STYLE_PROMPTS[style];
     const prompt = `
       You are a world-class UI/UX designer specializing in high-end, artistic websites.
       Create a single-file HTML landing page (with embedded Tailwind CSS via CDN) that demonstrates the application of this specific color palette:
@@ -125,14 +134,14 @@ export const generateWebsitePreview = async (palette: Palette): Promise<string> 
       Palette Name: "${palette.name}"
       Description: "${palette.description}"
       Colors: ${JSON.stringify(palette.colors)}
+      Target Style: ${style}
       
       Design Requirements:
-      1. **Strictly** use the provided hex codes for backgrounds, typography, buttons, and accents. Do not introduce random new colors (except black/white if absolutely necessary for contrast).
-      2. The design style should be "Artistic, Minimalist, and Poetic".
-      3. Include a Header, a Hero Section with a large typographic headline, a "Mood" section with abstract shapes or cards, and a minimal Footer.
-      4. Use a beautiful serif font (like Noto Serif) and sans-serif font pairing via Google Fonts.
-      5. Ensure the text content is in Chinese and matches the poetic theme of the palette.
-      6. Return a JSON object with a single key "html" containing the raw HTML string.
+      1. **Strictly** use the provided hex codes for backgrounds, typography, buttons, borders, and accents. Do not introduce random new colors (except black/white if absolutely necessary for contrast, but prefer using palette colors).
+      2. The design style and layout must follow this description: "${styleInstruction}".
+      3. Use a beautiful serif font (like Noto Serif SC) and sans-serif font (Inter) pairing via Google Fonts.
+      4. Ensure the text content is in Chinese and matches the poetic/thematic vibe of the palette, but adapted to the context (e.g., if E-commerce, use product names that sound poetic; if Dashboard, use relevant metrics).
+      5. Return a JSON object with a single key "html" containing the raw HTML string.
     `;
 
     const response = await ai.models.generateContent({
