@@ -1,7 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="Chromatopoetry Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # 灵韵配色 (Chromatopoetry)
 
 > 一款AI驱动的色彩美学应用，支持多种大模型供应商
