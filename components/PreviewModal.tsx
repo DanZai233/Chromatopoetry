@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2, Code, Check, ChevronDown, Layout } from 'lucide-react';
+import { X, Loader2, Code, Check, ChevronDown, Layout, Eye, Copy } from 'lucide-react';
 import { Palette, PreviewStyle } from '../types';
 
 interface PreviewModalProps {
@@ -22,6 +22,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
   onStyleChange
 }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
 
   if (!isOpen) return null;
 
@@ -93,22 +94,37 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            {!isLoading && htmlContent && (
-              <button
-                onClick={handleCopyCode}
-                className={`
-                  flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 border
-                  ${isCopied 
-                    ? 'bg-green-50 text-green-700 border-green-200' 
-                    : 'bg-white text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:shadow-sm'}
-                `}
-                title="Copy HTML Source"
-              >
-                {isCopied ? <Check className="w-3.5 h-3.5" /> : <Code className="w-3.5 h-3.5" />}
-                <span>{isCopied ? '已复制' : '复制源码'}</span>
-              </button>
-            )}
-            <div className="w-px h-6 bg-gray-200 mx-2 hidden sm:block"></div>
+             {!isLoading && htmlContent && (
+               <>
+                 <button
+                   onClick={() => setViewMode(viewMode === 'preview' ? 'code' : 'preview')}
+                   className={`
+                     flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 border
+                     ${viewMode === 'code'
+                       ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                       : 'bg-white text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:shadow-sm'}
+                   `}
+                   title="Toggle View"
+                 >
+                   {viewMode === 'code' ? <Eye className="w-3.5 h-3.5" /> : <Code className="w-3.5 h-3.5" />}
+                   <span>{viewMode === 'code' ? '预览渲染' : '查看代码'}</span>
+                 </button>
+                 <button
+                   onClick={handleCopyCode}
+                   className={`
+                     flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 border
+                     ${isCopied
+                       ? 'bg-green-50 text-green-700 border-green-200'
+                       : 'bg-white text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:shadow-sm'}
+                   `}
+                   title="Copy HTML Source"
+                 >
+                   {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                   <span>{isCopied ? '已复制' : '复制源码'}</span>
+                 </button>
+               </>
+             )}
+             <div className="w-px h-6 bg-gray-200 mx-2 hidden sm:block"></div>
             <button 
               onClick={onClose}
               className="p-1.5 hover:bg-black/5 rounded-full transition-colors text-gray-500 hover:text-gray-800"
@@ -118,33 +134,39 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
           </div>
         </div>
 
-        {/* Viewport */}
-        <div className="flex-grow relative bg-gray-50">
-          {isLoading ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-indigo-600 bg-white/50 backdrop-blur-sm z-10">
-               <Loader2 className="w-12 h-12 animate-spin" />
-               <p className="font-serif text-lg text-gray-600 animate-pulse">
-                 正在构建 <span className="font-medium text-indigo-600">{styleOptions.find(s => s.value === currentStyle)?.label.split(' · ')[1]}</span> 风格页面...
-               </p>
-               <div className="flex gap-2 mt-4">
-                 {palette?.colors.map(c => (
-                   <div key={c} className="w-4 h-4 rounded-full shadow-sm" style={{backgroundColor: c}}></div>
-                 ))}
-               </div>
-            </div>
-          ) : htmlContent ? (
-            <iframe 
-              srcDoc={htmlContent}
-              className="w-full h-full border-none bg-white transition-opacity duration-500"
-              title="Website Preview"
-              sandbox="allow-scripts"
-            />
-          ) : (
-             <div className="flex items-center justify-center h-full text-gray-400">
-               No content generated
+         {/* Viewport */}
+         <div className="flex-grow relative bg-gray-50">
+           {isLoading ? (
+             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-indigo-600 bg-white/50 backdrop-blur-sm z-10">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p className="font-serif text-lg text-gray-600 animate-pulse">
+                  正在构建 <span className="font-medium text-indigo-600">{styleOptions.find(s => s.value === currentStyle)?.label.split(' · ')[1]}</span> 风格页面...
+                </p>
+                <div className="flex gap-2 mt-4">
+                  {palette?.colors.map(c => (
+                    <div key={c} className="w-4 h-4 rounded-full shadow-sm" style={{backgroundColor: c}}></div>
+                  ))}
+                </div>
              </div>
-          )}
-        </div>
+           ) : htmlContent ? (
+             viewMode === 'preview' ? (
+               <iframe
+                 srcDoc={htmlContent}
+                 className="w-full h-full border-none bg-white transition-opacity duration-500"
+                 title="Website Preview"
+                 sandbox="allow-scripts"
+               />
+             ) : (
+               <pre className="w-full h-full overflow-auto p-4 text-xs font-mono text-gray-800 bg-gray-50">
+                 <code>{htmlContent}</code>
+               </pre>
+             )
+           ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                No content generated
+              </div>
+           )}
+         </div>
       </div>
     </div>
   );

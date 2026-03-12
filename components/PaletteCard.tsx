@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Palette } from '../types';
-import { Check, Eye, Play } from 'lucide-react';
+import { Check, Play, Copy } from 'lucide-react';
 
 interface PaletteCardProps {
   palette: Palette;
@@ -10,11 +10,19 @@ interface PaletteCardProps {
 
 const PaletteCard: React.FC<PaletteCardProps> = ({ palette, delay = 0, onPreview }) => {
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   const handleCopy = (color: string) => {
     navigator.clipboard.writeText(color);
     setCopiedColor(color);
     setTimeout(() => setCopiedColor(null), 1500);
+  };
+
+  const handleCopyAll = () => {
+    const colorsArray = JSON.stringify(palette.colors);
+    navigator.clipboard.writeText(colorsArray);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 1500);
   };
 
   return (
@@ -61,31 +69,43 @@ const PaletteCard: React.FC<PaletteCardProps> = ({ palette, delay = 0, onPreview
            </p>
         </div>
 
-        {/* Tags and Action */}
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200/50">
-           <div className="flex flex-wrap gap-2">
-            {palette.tags?.slice(0, 3).map((tag, i) => (
-                <span key={i} className="text-[10px] uppercase tracking-wider text-gray-400 border border-gray-200 rounded-full px-2 py-0.5">
-                {tag}
-                </span>
-            )) || (
-                <span className="text-[10px] uppercase tracking-wider text-gray-400">HEX CODES</span>
-            )}
-           </div>
+         {/* Tags and Action */}
+         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200/50">
+            <div className="flex flex-wrap gap-2 items-center">
+             {palette.tags?.slice(0, 3).map((tag, i) => (
+                 <span key={i} className="text-[10px] uppercase tracking-wider text-gray-400 border border-gray-200 rounded-full px-2 py-0.5">
+                 {tag}
+                 </span>
+             )) || (
+                 <span className="text-[10px] uppercase tracking-wider text-gray-400">HEX CODES</span>
+             )}
 
-           {onPreview && (
              <button 
                onClick={(e) => {
                  e.stopPropagation();
-                 onPreview(palette);
+                 handleCopyAll();
                }}
-               className="flex items-center gap-1.5 pl-3 pr-4 py-1.5 bg-gray-900 text-white rounded-full text-xs font-medium opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-md hover:bg-indigo-600"
+               className="text-[10px] uppercase tracking-wider text-indigo-600 border border-indigo-200 rounded-full px-2 py-0.5 hover:bg-indigo-50 transition-colors flex items-center gap-1"
+               title="复制所有颜色"
              >
-               <Play className="w-3 h-3 fill-current" />
-               预览应用
+               {copiedAll ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+               {copiedAll ? '已复制' : '复制配色'}
              </button>
-           )}
-        </div>
+            </div>
+
+            {onPreview && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPreview(palette);
+                }}
+                className="flex items-center gap-1.5 pl-3 pr-4 py-1.5 bg-gray-900 text-white rounded-full text-xs font-medium opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-md hover:bg-indigo-600"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                预览应用
+              </button>
+            )}
+         </div>
       </div>
     </div>
   );
