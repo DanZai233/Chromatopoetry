@@ -1,5 +1,7 @@
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache git
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,16 +12,10 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine
+FROM nginx:1.27-alpine
 
-WORKDIR /app
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-COPY package*.json ./
+EXPOSE 80
 
-RUN npm ci --omit=dev
-
-COPY --from=builder /app/dist ./dist
-
-EXPOSE 5173
-
-CMD ["npm", "run", "preview", "--", "--host"]
+CMD ["nginx", "-g", "daemon off;"]

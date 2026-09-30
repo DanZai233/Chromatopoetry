@@ -21,12 +21,7 @@
 
 - 🎨 **灵感生成** - 通过文字描述生成富有诗意的配色方案
 - 🖼️ **图片提取** - 从图片中智能提取色彩，捕捉瞬间的色彩灵魂
-- 🌐 **多模型支持** - 支持多种AI模型供应商：
-  - Gemini (Google)
-  - OpenAI
-  - DeepSeek
-  - OpenRouter
-  - 火山引擎
+- 🌐 **多模型支持** - 通过 UniLLM 统一接入 14 家供应商，包括 Gemini、OpenAI、Anthropic、DeepSeek、火山引擎、Kimi、通义、GLM、Grok、Groq、Mistral、SiliconFlow、Ollama 和任意 OpenAI 兼容端点
 - 🎭 **实时预览** - 多种风格的网站预览（诗意、电商、博客、作品集、仪表板）
 - ⚡ **Vercel部署** - 一键部署到Vercel，自动CDN加速
 - 🐳 **Docker部署** - 一键部署，开箱即用
@@ -58,7 +53,7 @@
 
 4. 在浏览器中打开 `http://localhost:5173`
 
-5. 在应用中点击右上角⚙️设置按钮，配置您的AI模型和API密钥
+5. 在应用中点击右上角设置按钮，选择 UniLLM 供应商和 API 密钥
 
 ---
 
@@ -88,7 +83,9 @@
    - **Output Directory**: `dist`
    - **Install Command**: `npm install`
    - **Environment Variables**（可选）：
-     - `API_KEY`: 默认API密钥（用户也可以在前端配置）
+     - `VITE_UNILLM_PROVIDER`: 默认供应商，例如 `gemini`
+     - `VITE_UNILLM_API_KEY`: 默认 API 密钥（用户也可以在前端配置）
+     - `VITE_UNILLM_MODEL`: 默认模型名称
    - 点击 "Deploy"
 
 4. **等待部署完成**
@@ -104,9 +101,13 @@
 
 | 变量名 | 说明 | 示例 |
 |--------|------|------|
-| `API_KEY` | 默认API密钥 | `sk-xxxxx` |
+| `VITE_UNILLM_PROVIDER` | 默认供应商 | `gemini` |
+| `VITE_UNILLM_API_KEY` | 默认 API 密钥 | `sk-xxxxx` |
+| `VITE_UNILLM_MODEL` | 默认模型 | `gemini-2.5-flash` |
+| `VITE_UNILLM_BASE_URL` | 自定义兼容端点 | `https://example.com/v1` |
 
 > **注意**：用户也可以直接在应用的前端界面中配置API密钥，无需设置环境变量。
+> `VITE_*` 会进入浏览器构建产物，请只使用受限额约束的密钥。
 
 ### 常见问题
 
@@ -142,9 +143,11 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
    ```bash
    cp .env.example .env
    ```
-   编辑 `.env` 文件，设置默认API密钥：
+   编辑 `.env` 文件，按需设置默认配置：
    ```
-   API_KEY=your_api_key_here
+   VITE_UNILLM_PROVIDER=gemini
+   VITE_UNILLM_API_KEY=your_api_key_here
+   VITE_UNILLM_MODEL=gemini-2.5-flash
    ```
 
 3. 使用Docker Compose启动：
@@ -182,28 +185,26 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 
 ### 支持的模型供应商
 
-| 供应商 | 模型示例 | 说明 |
+| 供应商 | 模型示例 | 协议 |
 |--------|----------|------|
-| **Gemini** | `gemini-3-flash-preview` | Google官方模型，默认选择 |
-| **OpenAI** | `gpt-4o-mini` | OpenAI GPT系列 |
-| **DeepSeek** | `deepseek-chat` | DeepSeek开源模型 |
-| **OpenRouter** | `anthropic/claude-3.5-sonnet` | 聚合多种模型 |
-| **火山引擎** | `ep-20250215134427-k4s9k` | 字节跳动豆包模型，需使用Endpoint ID |
+| **Gemini** | `gemini-2.5-flash` | Gemini |
+| **OpenAI** | `gpt-4o-mini` | OpenAI 兼容 |
+| **Anthropic** | `claude-sonnet-4-20250514` | Anthropic |
+| **DeepSeek** | `deepseek-chat` | OpenAI 兼容 |
+| **火山引擎** | `doubao-seed-2-0-pro` 或 Endpoint ID | OpenAI 兼容 |
+| **Moonshot / Qwen / Zhipu / xAI / Groq / Mistral / SiliconFlow** | 对应厂商模型名 | OpenAI 兼容 |
+| **Ollama** | `llama3.1:8b` | 本地 OpenAI 兼容 |
+| **Custom** | 任意模型名 | 任意 OpenAI 兼容端点 |
+
+所有厂商统一通过 [UniLLM SDK](https://github.com/DanZai233/unillm-sdk) 接入，应用只维护一份请求、重试、超时和 JSON 解析逻辑。
 
 ### 配置步骤
 
-1. 打开应用，点击右上角的⚙️设置按钮
-2. 选择您偏好的模型供应商
-3. 输入对应的API密钥
-4. （可选）自定义Base URL和模型名称
-5. 点击"保存配置"
-
-**⚠️ 火山引擎用户注意：**
-- 应用支持两种API模式：OpenAI 兼容接口和原生 API
-- API密钥格式：`AccessKeyID;AccessKeySecret`
-- 配置面板中可以选择API模式，并会显示详细的配置说明
-- OpenAI 兼容模式：使用 Endpoint ID
-- 原生 API 模式：使用原生模型名称（如 `doubao-pro-32k`）
+1. 打开应用，点击右上角的设置按钮
+2. 选择模型供应商
+3. 输入 API 密钥。Ollama 和部分自建端点可以留空
+4. 按需修改 Base URL 和模型名称
+5. 点击“保存配置”
 
 配置完成后，您可以：
 - 通过"生成"页面使用文字描述创建配色
@@ -226,30 +227,18 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 - 访问 [DeepSeek Platform](https://platform.deepseek.com/)
 - 注册并获取API密钥
 
-### OpenRouter
-- 访问 [OpenRouter](https://openrouter.ai/keys)
-- 创建API密钥
+### Anthropic
+- 访问 [Anthropic Console](https://console.anthropic.com/)
+- 创建 API 密钥
+
+### Moonshot / Qwen / Zhipu / xAI / Groq / Mistral / SiliconFlow
+- 在各厂商控制台创建 API 密钥，并在设置面板中选择对应供应商
+- 如需使用 OpenRouter 等聚合服务，请选择 **Custom**，把服务地址填入 Base URL
 
 ### 火山引擎
 - 访问 [火山引擎控制台](https://console.volcengine.com/ark)
-- 在访问管理中获取API密钥，格式为 `AccessKeyID;AccessKeySecret`
-- **API密钥** 填写 `AccessKeyID;AccessKeySecret` 格式
-- **Base URL** 保持默认：`https://ark.cn-beijing.volces.com/api/v3`
-
-本应用支持火山引擎的两种API模式，可在设置中选择：
-
-**1. OpenAI 兼容接口模式（推荐新手）**
-- 模型名称填写 Endpoint ID（如：`ep-20250215134427-k4s9k`）
-- 需要创建推理接入点（Endpoint）
-- 使用标准的 OpenAI SDK
-
-**2. 原生 API 模式（推荐进阶用户）**
-- 模型名称填写原生模型名称（如：`doubao-pro-32k`）
-- 无需创建 Endpoint，直接使用模型
-- 支持图片输入，更完整的原生功能
-- 使用火山引擎 Responses API
-
-> 💡 **建议**：如果您刚开始使用，建议选择 **OpenAI 兼容接口**；如果您需要更完整的功能，可以选择 **原生 API**。
+- 在访问管理中获取 API 密钥
+- 模型名称可填写 Ark Endpoint ID，或 UniLLM 内置模型名
 
 ---
 
@@ -259,9 +248,7 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 - **构建工具**: Vite
 - **UI组件**: Tailwind CSS
 - **图标库**: Lucide React
-- **AI SDK**: 
-  - @google/genai (Gemini)
-  - openai (OpenAI兼容接口)
+- **AI SDK**: unillm-sdk/browser（统一适配 14 家模型供应商）
 - **容器化**: Docker + Docker Compose
 - **部署平台**: Vercel
 
@@ -280,8 +267,7 @@ chromatopoetry/
 │   ├── PreviewModal.tsx# 预览模态框
 │   └── Settings.tsx    # 设置面板
 ├── services/           # API服务层
-│   ├── aiService.ts    # AI模型服务
-│   └── geminiService.ts# Gemini兼容服务（待移除）
+│   └── aiService.ts    # UniLLM 统一模型服务
 ├── App.tsx            # 主应用组件
 ├── types.ts           # TypeScript类型定义
 ├── constants.ts       # 常量定义
