@@ -196,7 +196,7 @@ A: API密钥存储在浏览器的 localStorage 中，不会上传到服务器。
 | **Ollama** | `llama3.1:8b` | 本地 OpenAI 兼容 |
 | **Custom** | 任意模型名 | 任意 OpenAI 兼容端点 |
 
-所有厂商统一通过 [UniLLM SDK](https://github.com/DanZai233/unillm-sdk) 接入，应用只维护一份请求、重试、超时和 JSON 解析逻辑。
+所有厂商统一通过 [UniLLM SDK](https://github.com/DanZai233/unillm-sdk) 接入，应用只维护一份请求、超时和输出解析逻辑。
 
 ### 配置步骤
 

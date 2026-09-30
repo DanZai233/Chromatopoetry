@@ -176,7 +176,7 @@ const App: React.FC = () => {
     } catch (e) {
       if (isAbortError(e)) return;
       console.error(e);
-      setPreviewError('预览生成失败，请重试或切换其他页面风格。');
+      setPreviewError(getAIErrorMessage(e, '预览生成失败，请重试或切换其他页面风格。'));
     } finally {
       if (previewAbortRef.current === controller) {
         previewAbortRef.current = null;
@@ -528,6 +528,9 @@ const App: React.FC = () => {
             palette={previewPalette}
             currentStyle={previewStyle}
             onStyleChange={handleStyleChange}
+            onRetry={() => {
+              if (previewPalette) void generatePreviewContent(previewPalette, previewStyle);
+            }}
           />
         )}
 

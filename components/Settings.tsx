@@ -314,7 +314,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
 
           <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
             <p className="text-sm text-blue-800">
-              配置由 <strong>UniLLM SDK</strong> 统一适配，支持自动重试、超时控制和 JSON 输出兜底。
+              配置由 <strong>UniLLM SDK</strong> 统一适配，支持超时控制、错误分类和输出解析兜底。
             </p>
           </div>
         </form>

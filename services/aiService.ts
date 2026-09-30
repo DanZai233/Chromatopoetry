@@ -2,6 +2,7 @@ import {
   createLLM,
   isLLMError,
   normalizeProviderId,
+  parseJsonText,
   type ChatMessage,
   type ProviderConfig,
 } from 'unillm-sdk/browser';
@@ -75,7 +76,7 @@ const toProviderConfig = (config: ModelConfig): ProviderConfig => ({
   temperature: 0.75,
   maxTokens: 4096,
   timeoutMs: 90_000,
-  retries: 2,
+  retries: 0,
 });
 
 const createClient = () => createLLM(toProviderConfig(currentConfig));
@@ -99,6 +100,43 @@ const toRecord = (value: unknown): Record<string, unknown> => (
     ? value as Record<string, unknown>
     : {}
 );
+
+const parseModelJson = (value: string): Record<string, unknown> => {
+  try {
+    return toRecord(parseJsonText(value));
+  } catch {
+    return {};
+  }
+};
+
+const extractHtmlResponse = (value: string): string => {
+  let candidate = value.trim();
+  if (!candidate) return '';
+
+  const fenced = candidate.match(/```(?:html)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) {
+    candidate = fenced[1].trim();
+  }
+
+  if (/^[{[]/.test(candidate)) {
+    const payload = parseModelJson(candidate);
+    if (typeof payload.html === 'string') {
+      candidate = payload.html.trim();
+    }
+  }
+
+  const htmlStart = candidate.search(/<!doctype\s+html|<html[\s>]/i);
+  if (htmlStart > 0) {
+    candidate = candidate.slice(htmlStart);
+  }
+
+  const htmlEnd = candidate.toLowerCase().lastIndexOf('</html>');
+  if (htmlEnd >= 0) {
+    candidate = candidate.slice(0, htmlEnd + '</html>'.length);
+  }
+
+  return candidate.trim();
+};
 
 const normalizeHex = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
@@ -191,7 +229,11 @@ export const generatePalettesFromText = async (prompt: string): Promise<Palette[
     },
   ];
 
-  const payload = toRecord(await client.generateJson(messages));
+  const result = await client.chat(messages, {
+    temperature: 0.75,
+    maxTokens: 4096,
+  });
+  const payload = parseModelJson(result.text);
   const palettes = Array.isArray(payload.palettes)
     ? payload.palettes
         .map((item, index) => buildPalette(item, 'gen-text', index))
@@ -243,9 +285,12 @@ export const extractPaletteFromImage = async (
     },
   ];
 
-  const palette = buildPalette(await client.generateJson(messages, {
+  const result = await client.chat(messages, {
+    temperature: 0.75,
+    maxTokens: 4096,
     signal: options.signal,
-  }), 'gen-img');
+  });
+  const palette = buildPalette(parseModelJson(result.text), 'gen-img');
   if (!palette) {
     throw new Error('模型未返回有效的图片配色数据');
   }
@@ -278,22 +323,24 @@ export const generateWebsitePreview = async (
 2. 使用 Google Fonts 引入 Noto Serif SC 与 Inter，建立清晰的中英文字体层级。
 3. 中文文案要贴合当前页面类型，并保持与配色一致的叙事气质。
 4. 输出可直接运行的完整 HTML，不引用本地资源。
-5. 只返回 JSON，不要 Markdown 代码围栏。
-
-返回结构：
-{
-  "html": "<!DOCTYPE html>..."
-}
+5. 只输出 HTML 源码，从 <!DOCTYPE html> 开始，到 </html> 结束。
+6. 不要 Markdown 代码围栏，不要额外解释，不要用 JSON 包裹。
   `;
 
-  const payload = toRecord(await client.generateJson(prompt, {
-    temperature: 0.8,
+  const result = await client.chat(prompt, {
+    temperature: 0.75,
     maxTokens: 8192,
     signal: options.signal,
-  }));
-  const html = typeof payload.html === 'string' ? payload.html.trim() : '';
-  if (!html) {
-    throw new Error('模型未返回有效的预览页面');
+  });
+  const html = extractHtmlResponse(result.text);
+  if (!/<(?:html|body|!doctype)[\s>]/i.test(html)) {
+    throw new Error('模型未返回有效的 HTML 页面');
+  }
+  if (
+    /(?:length|max[_\s-]?tokens)/i.test(result.finishReason || '')
+    && !/<\/html>\s*$/i.test(html)
+  ) {
+    throw new Error('模型输出被截断，请重试或减少页面复杂度');
   }
 
   if (previewCache.size >= MAX_PREVIEW_CACHE_SIZE) {

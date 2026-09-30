@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Loader2, Code, Check, ChevronDown, Layout, Eye, Copy, AlertCircle } from 'lucide-react';
+import { X, Loader2, Code, Check, ChevronDown, Layout, Eye, Copy, AlertCircle, RefreshCw } from 'lucide-react';
 import { Palette, PreviewStyle } from '../types';
 import { useDialogFocus } from '../hooks/useDialogFocus';
 
@@ -12,6 +12,7 @@ interface PreviewModalProps {
   palette: Palette | null;
   currentStyle: PreviewStyle;
   onStyleChange: (style: PreviewStyle) => void;
+  onRetry: () => void;
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = ({ 
@@ -22,7 +23,8 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
   error,
   palette,
   currentStyle,
-  onStyleChange
+  onStyleChange,
+  onRetry,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
@@ -182,7 +184,15 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
              <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
                <AlertCircle className="h-8 w-8 text-red-500" aria-hidden="true" />
                <p className="font-medium text-gray-800">{error}</p>
-               <p className="max-w-md text-sm text-gray-500">可以切换其他页面风格后重试，现有配色不会丢失。</p>
+               <p className="max-w-md text-sm text-gray-500">现有配色不会丢失，可以直接重试或切换其他页面风格。</p>
+               <button
+                 type="button"
+                 onClick={onRetry}
+                 className="mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-[background-color,box-shadow,transform] hover:bg-indigo-600 active:scale-[0.98]"
+               >
+                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                 重新生成
+               </button>
              </div>
            ) : htmlContent ? (
              viewMode === 'preview' ? (
